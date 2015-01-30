@@ -1,7 +1,7 @@
 inherit gstreamer
 
 NAME="gstreamer1.0-editing-services"
-VERSION=1.2.0
+VERSION=1.4.0
 RELEASE=1
 CATEGORY="Libs"
 SUMMARY="GStreamer non-linear editor library"
