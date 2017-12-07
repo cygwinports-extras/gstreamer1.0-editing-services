@@ -1,7 +1,7 @@
-inherit gstreamer
+inherit python2 python3 gstreamer
 
 NAME="gstreamer1.0-editing-services"
-VERSION=1.4.0
+VERSION=1.12.3
 RELEASE=1
 CATEGORY="Libs"
 SUMMARY="GStreamer non-linear editor library"
@@ -11,10 +11,48 @@ HOMEPAGE="http://gstreamer.freedesktop.org/"
 SRC_URI="http://gstreamer.freedesktop.org/src/${NAME/1.0}/${NAME/1.0}-${VERSION}.tar.xz"
 SRC_DIR="${NAME/1.0}-${VERSION}"
 
-PKG_NAMES="${NAME} libges1.0_0 libges1.0-devel girepository-GES1.0"
+PKG_NAMES="${NAME} gstreamer1.0-plugins-nle libges1.0_0 libges1.0-devel girepository-GES1.0"
 gstreamer1_0_editing_services_CATEGORY="Video"
 gstreamer1_0_editing_services_SUMMARY="${SUMMARY% *} tool"
-gstreamer1_0_editing_services_CONTENTS="usr/bin/ges-* usr/share/doc/"
-girepository_GES1_0_CONTENTS="usr/*/gir*-1.0/GES*-1.0.*"
-libges1_0_0_CONTENTS="usr/bin/*-1.0-0.dll"
-libges1_0_devel_CONTENTS="usr/include/ usr/lib/lib* usr/lib/pkgconfig/"
+gstreamer1_0_editing_services_CONTENTS="
+	usr/bin/ges-launch-1.0.exe
+	usr/share/bash-completion/completions/ges-launch-1.0
+	usr/share/doc/
+	usr/share/man/man1/ges-launch-1.0.1*
+"
+gstreamer1_0_plugins_nle_CATEGORY="Video"
+gstreamer1_0_plugins_nle_SUMMARY="${SUMMARY% *} plugin"
+gstreamer1_0_plugins_nle_OBSOLETES="gstreamer1.0-plugins-gnonlin"
+gstreamer1_0_plugins_nle_REQUIRES="gstreamer1.0-plugins-base"
+gstreamer1_0_plugins_nle_CONTENTS="usr/lib/gstreamer-1.0/cyggstnle.dll"
+girepository_GES1_0_CONTENTS="
+	usr/*/gir*-1.0/GES-1.0.*
+	${PYTHON2_SITELIB#/}/gi/overrides/GES.py*
+	${PYTHON3_SITELIB#/}/gi/overrides/GES.py
+	${PYTHON3_SITELIB#/}/gi/overrides/__pycache__/GES.*
+"
+libges1_0_0_REQUIRES="gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-nle"
+libges1_0_0_CONTENTS="usr/bin/cygges-1.0-0.dll"
+libges1_0_devel_CONTENTS="
+	usr/include/gstreamer-1.0/ges/
+	usr/lib/libges-1.0.dll.a
+	usr/lib/pkgconfig/gst-editing-services-1.0.pc
+"
+
+src_compile() {
+	cd ${S}
+	gstreamer_autoreconf
+	cd ${B}
+	cygconf
+	cygmake
+}
+
+src_install() {
+	cd ${B}
+	# pygesdir is incorrect, and we want this for both 2 and 3
+	cyginstall pyges_PYTHON=
+	python2into gi/overrides
+	dopython2 ${S}/bindings/python/gi/overrides/GES.py
+	python3into gi/overrides
+	dopython3 ${S}/bindings/python/gi/overrides/GES.py
+}
